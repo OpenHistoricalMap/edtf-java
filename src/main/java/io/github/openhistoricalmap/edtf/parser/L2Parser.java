@@ -8,7 +8,9 @@ import io.github.openhistoricalmap.edtf.types.EdtfDate;
 import io.github.openhistoricalmap.edtf.types.EdtfDecade;
 import io.github.openhistoricalmap.edtf.types.EdtfList;
 import io.github.openhistoricalmap.edtf.types.EdtfSet;
+import io.github.openhistoricalmap.edtf.types.EdtfYear;
 import io.github.openhistoricalmap.edtf.types.ListMember;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,9 +45,21 @@ public final class L2Parser {
         if (first == '[') return parseSet(input);
         if (first == '{') return parseList(input);
 
+        // L2Y: exponential or significant-digits year notation
+        if (first == 'Y') {
+            EdtfYear y = tryParseL2Y(input);
+            if (y != null) return y;
+        }
+
         // L2 extended season: YYYY-SS where SS is 25-41
         if (looksLikeExtendedSeason(input)) {
             return parseExtendedSeason(input);
+        }
+
+        // L2 positional UA: markers like `2020?-05` or `?2020-~05~-15?`
+        if (containsAnyUaMarker(input)) {
+            EdtfDate ua = tryParsePositionalUa(input);
+            if (ua != null) return ua;
         }
 
         // L2 decade: 3-digit form, optional sign, optional UA
@@ -53,6 +67,118 @@ public final class L2Parser {
         if (decade != null) return decade;
 
         return parseMaskedDate(input);
+    }
+
+    private static boolean containsAnyUaMarker(String input) {
+        for (int i = 0; i < input.length(); i++) {
+            char ch = input.charAt(i);
+            if (ch == '?' || ch == '~' || ch == '%') return true;
+        }
+        return false;
+    }
+
+    /**
+     * Parse a date with UA markers at any of the six positional slots
+     * defined in edtf.js's bitmask UA table:
+     *
+     * <pre>
+     *   [UA]YYYY[UA]-[UA]MM[UA]-[UA]DD[UA]
+     *      0    1    2    3    4    5
+     * </pre>
+     *
+     * Each optional UA marker ({@code ?}, {@code ~}, or {@code %}) at a
+     * position OR's {@link Bitmask#UA} into the uncertain / approximate
+     * mask per the symbol. Must have at least one marker present for
+     * the input to be an L2 positional-UA date (otherwise the caller's
+     * other L2 branches handle it).
+     */
+    private static EdtfDate tryParsePositionalUa(String input) {
+        Cursor c = new Cursor(input);
+        int[] uncertain = {0};
+        int[] approximate = {0};
+
+        // Position 0: UA before year
+        char ua0 = consumeMaybeUa(c);
+
+        int sign = 1;
+        if (c.peek() == '-') { c.accept('-'); sign = -1; }
+
+        String y4 = c.digits(4);
+        if (y4 == null) return null;
+        int year = Integer.parseInt(y4) * sign;
+
+        // Position 1: UA after year
+        char ua1 = consumeMaybeUa(c);
+
+        boolean hasMonth = !c.atEnd() && c.peek() == '-';
+        if (!hasMonth) {
+            if (!c.atEnd()) return null;
+            if (ua0 == 0 && ua1 == 0) return null;
+            applyUa(uncertain, approximate, ua0, 0);
+            applyUa(uncertain, approximate, ua1, 1);
+            return finish(EdtfDate.ofYear(year), uncertain[0], approximate[0]);
+        }
+
+        c.accept('-');
+        char ua2 = consumeMaybeUa(c);
+        String m2 = c.digits(2);
+        if (m2 == null) return null;
+        int month = Integer.parseInt(m2);
+        if (month < 1 || month > 12) return null;
+        char ua3 = consumeMaybeUa(c);
+
+        boolean hasDay = !c.atEnd() && c.peek() == '-';
+        if (!hasDay) {
+            if (!c.atEnd()) return null;
+            if (ua0 == 0 && ua1 == 0 && ua2 == 0 && ua3 == 0) return null;
+            applyUa(uncertain, approximate, ua0, 0);
+            applyUa(uncertain, approximate, ua1, 1);
+            applyUa(uncertain, approximate, ua2, 2);
+            applyUa(uncertain, approximate, ua3, 3);
+            return finish(EdtfDate.ofYearMonth(year, month), uncertain[0], approximate[0]);
+        }
+
+        c.accept('-');
+        char ua4 = consumeMaybeUa(c);
+        String d2 = c.digits(2);
+        if (d2 == null) return null;
+        int day = Integer.parseInt(d2);
+        char ua5 = consumeMaybeUa(c);
+
+        if (!c.atEnd()) return null;
+        if (ua0 == 0 && ua1 == 0 && ua2 == 0 && ua3 == 0 && ua4 == 0 && ua5 == 0) {
+            return null;
+        }
+        applyUa(uncertain, approximate, ua0, 0);
+        applyUa(uncertain, approximate, ua1, 1);
+        applyUa(uncertain, approximate, ua2, 2);
+        applyUa(uncertain, approximate, ua3, 3);
+        applyUa(uncertain, approximate, ua4, 4);
+        applyUa(uncertain, approximate, ua5, 5);
+        return finish(EdtfDate.ofYearMonthDay(year, month, day),
+            uncertain[0], approximate[0]);
+    }
+
+    private static char consumeMaybeUa(Cursor c) {
+        if (c.atEnd()) return 0;
+        char ch = c.peek();
+        if (ch == '?' || ch == '~' || ch == '%') {
+            c.accept(ch);
+            return ch;
+        }
+        return 0;
+    }
+
+    private static void applyUa(int[] uncertain, int[] approximate, char ua, int position) {
+        if (ua == 0) return;
+        int mask = Bitmask.UA[position];
+        if (ua == '?' || ua == '%') uncertain[0] |= mask;
+        if (ua == '~' || ua == '%') approximate[0] |= mask;
+    }
+
+    private static EdtfDate finish(EdtfDate date, int uncertain, int approximate) {
+        return date.withQualifiers(
+            new Bitmask(uncertain), new Bitmask(approximate), Bitmask.EMPTY);
     }
 
     /**
@@ -83,6 +209,85 @@ public final class L2Parser {
         }
         int value = Integer.parseInt(s) * sign;
         return EdtfDecade.of(value, uncertain, approximate);
+    }
+
+    /**
+     * Parse an L2 Y-notation year. Recognises:
+     * <ul>
+     *   <li>{@code Y12345S3} &mdash; L1 Y-notation plus a
+     *       {@code S}-suffixed significant-digits count.</li>
+     *   <li>{@code Y1E5} / {@code Y-1E5} &mdash; exponential
+     *       ({@code coefficient E exponent}).</li>
+     *   <li>{@code Y1E5S3} &mdash; exponential plus significant-digits.</li>
+     *   <li>{@code 1234S3} (no Y prefix) &mdash; a four-digit year with
+     *       a significant-digits suffix (L2Y alternative).</li>
+     * </ul>
+     * Returns {@code null} when the input does not look like an L2Y
+     * form so the caller can continue with other L2 alternatives.
+     */
+    private static EdtfYear tryParseL2Y(String input) {
+        if (!input.startsWith("Y")) return null;
+        String rest = input.substring(1);
+
+        // Optional S-suffix split.
+        int sIdx = rest.indexOf('S');
+        int significant = 0;
+        String valuePart = rest;
+        if (sIdx >= 0) {
+            String sigStr = rest.substring(sIdx + 1);
+            if (sigStr.isEmpty() || !sigStr.chars().allMatch(Character::isDigit)) {
+                return null;
+            }
+            significant = Integer.parseInt(sigStr);
+            valuePart = rest.substring(0, sIdx);
+        }
+
+        // Exponential form: coefficient 'E' exponent
+        int eIdx = valuePart.indexOf('E');
+        boolean exponential = eIdx >= 0;
+        BigInteger value;
+        if (exponential) {
+            String coefStr = valuePart.substring(0, eIdx);
+            String expStr = valuePart.substring(eIdx + 1);
+            int sign = 1;
+            if (coefStr.startsWith("-")) {
+                sign = -1;
+                coefStr = coefStr.substring(1);
+            }
+            if (coefStr.isEmpty() || expStr.isEmpty()) return null;
+            if (!coefStr.chars().allMatch(Character::isDigit)) return null;
+            if (!expStr.chars().allMatch(Character::isDigit)) return null;
+            BigInteger coef = new BigInteger(coefStr);
+            int exp = Integer.parseInt(expStr);
+            value = coef.multiply(BigInteger.TEN.pow(exp));
+            if (sign < 0) value = value.negate();
+        } else {
+            // Plain digits (possibly negative)
+            int sign = 1;
+            String digits = valuePart;
+            if (digits.startsWith("-")) {
+                sign = -1;
+                digits = digits.substring(1);
+            }
+            if (digits.isEmpty()) return null;
+            if (!digits.chars().allMatch(Character::isDigit)) return null;
+            value = new BigInteger(digits);
+            if (sign < 0) value = value.negate();
+            // Plain Y-notation without S and without E is L1; we only
+            // claim this input when S is set (otherwise L1Parser's
+            // Y-notation wins).
+            if (significant == 0) return null;
+        }
+
+        if (exponential && significant > 0) {
+            // Both features: need a new factory that captures both.
+            return EdtfYear.ofExponentialSignificant(value, significant);
+        }
+        if (exponential) {
+            return EdtfYear.ofExponential(value);
+        }
+        // significant > 0, no exponential
+        return EdtfYear.ofSignificant(value, significant);
     }
 
     private static boolean looksLikeExtendedSeason(String input) {
