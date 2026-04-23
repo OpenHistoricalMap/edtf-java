@@ -1,5 +1,10 @@
 # edtf-java
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.openhistoricalmap/edtf?logo=apachemaven&label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.openhistoricalmap/edtf)
+[![Javadoc](https://javadoc.io/badge2/io.github.openhistoricalmap/edtf/javadoc.svg)](https://javadoc.io/doc/io.github.openhistoricalmap/edtf)
+[![CI](https://github.com/OpenHistoricalMap/edtf-java/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/OpenHistoricalMap/edtf-java/actions/workflows/ci.yml)
+[![License: BSD-2-Clause](https://img.shields.io/badge/License-BSD%202--Clause-blue.svg)](LICENSE)
+
 A Java library for parsing, comparing, and rendering [Extended Date/Time
 Format (EDTF)][edtf] strings, per **ISO 8601-2:2019** (with Amendment 1,
 2025) and the Library of Congress EDTF specification.
