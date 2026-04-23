@@ -10,6 +10,8 @@
  */
 module io.github.openhistoricalmap.edtf {
     exports io.github.openhistoricalmap.edtf;
-    // Additional public packages (types, format) will be exported
-    // as their classes land in subsequent phases.
+    exports io.github.openhistoricalmap.edtf.types;
+    // The format package will be exported when localized formatting
+    // lands in Phase 7. The parser and internal packages remain
+    // unexported implementation detail.
 }
