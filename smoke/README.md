@@ -19,10 +19,14 @@ that:
    `io.github.openhistoricalmap:edtf:${edtf.version}` from Maven
    Central into `lib/`.
 2. `javac` compiles `src/Smoke.java`, which calls
-   `Edtf.parse("2020-05-15")` and prints the round-tripped EDTF
-   string and the lower bound.
-3. `java` runs the compiled class and the script asserts the
-   output matches expected values; any deviation exits non-zero.
+   `Edtf.parse("2020-05-15")` and a `2020/..` open-upper interval.
+3. `java` runs the compiled class and the script asserts on the
+   captured stdout; any deviation exits non-zero.
+
+The smoke source uses only API that has been stable since 0.2.0
+(the first published release). The daily workflow therefore
+exercises whichever version is currently on Maven Central without
+needing to be in lockstep with new feature releases.
 
 ## Prerequisites
 

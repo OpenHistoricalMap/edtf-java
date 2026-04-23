@@ -56,8 +56,9 @@
 
         <condition property="smoke.passed">
             <and>
-                <contains string="${smoke.stdout}" substring="2020-05-15"/>
-                <contains string="${smoke.stdout}" substring="May 2020"/>
+                <contains string="${smoke.stdout}" substring="canonical: 2020-05-15"/>
+                <contains string="${smoke.stdout}" substring="type: DATE"/>
+                <contains string="${smoke.stdout}" substring="interval canonical: 2020/.."/>
             </and>
         </condition>
         <fail unless="smoke.passed"
