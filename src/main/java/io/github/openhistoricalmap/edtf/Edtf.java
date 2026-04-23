@@ -2,6 +2,7 @@ package io.github.openhistoricalmap.edtf;
 
 import io.github.openhistoricalmap.edtf.parser.L0Parser;
 import io.github.openhistoricalmap.edtf.parser.L1Parser;
+import io.github.openhistoricalmap.edtf.parser.L2Parser;
 import java.util.Objects;
 
 /**
@@ -43,9 +44,8 @@ public final class Edtf {
         Objects.requireNonNull(input, "input");
         Objects.requireNonNull(options, "options");
 
-        // Try L0 first, then L1. Lowest-level legal result wins per
-        // edtf.js behaviour. L2 and L3 will join this chain in later
-        // phases.
+        // Try L0, then L1, then L2. Lowest-level legal result wins per
+        // edtf.js behaviour. L3 will join this chain in a later phase.
         EdtfTemporal result;
         try {
             result = L0Parser.parse(input);
@@ -53,7 +53,11 @@ public final class Edtf {
             try {
                 result = L1Parser.parse(input);
             } catch (EdtfParseException l1Err) {
-                throw l0Err;
+                try {
+                    result = L2Parser.parse(input);
+                } catch (EdtfParseException l2Err) {
+                    throw l0Err;
+                }
             }
         }
 

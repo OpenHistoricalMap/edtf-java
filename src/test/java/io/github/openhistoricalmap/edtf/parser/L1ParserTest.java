@@ -180,7 +180,9 @@ class L1ParserTest {
         "2020?~",             // mixing UA markers outside of %
         "YYYY",               // Y_YY is year mask, not Y-notation
         "2020//2021",         // double slash
-        "2020-XX-01",         // can't have unspecified month with known day
+        // Note: 2020-XX-01 used to be rejected at L1, but L2 now
+        // accepts it as a partial mask (non-progressive). That case
+        // moved to the L2 parser tests.
     })
     void rejectsInvalidL1(String input) {
         assertThatThrownBy(() -> Edtf.parse(input))
