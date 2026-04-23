@@ -11,7 +11,6 @@
 module io.github.openhistoricalmap.edtf {
     exports io.github.openhistoricalmap.edtf;
     exports io.github.openhistoricalmap.edtf.types;
-    // The format package will be exported when localized formatting
-    // lands in Phase 7. The parser and internal packages remain
-    // unexported implementation detail.
+    exports io.github.openhistoricalmap.edtf.format;
+    // The parser and internal packages remain implementation detail.
 }
