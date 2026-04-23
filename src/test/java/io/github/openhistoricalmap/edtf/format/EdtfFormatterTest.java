@@ -121,4 +121,65 @@ class EdtfFormatterTest {
         // X-masks aren't yet handled by the formatter; falls back.
         assertThat(f.format(Edtf.parse("2020-XX"))).isEqualTo("2020-XX");
     }
+
+    // ----- locale switching -----
+
+    @Test
+    void germanQualifier() {
+        EdtfFormatter de = EdtfFormatter.forLocale(Locale.GERMAN);
+        assertThat(de.format(Edtf.parse("2020?"))).isEqualTo("2020 (unsicher)");
+        assertThat(de.format(Edtf.parse("2020~"))).isEqualTo("circa 2020");
+    }
+
+    @Test
+    void germanInterval() {
+        EdtfFormatter de = EdtfFormatter.forLocale(Locale.GERMAN);
+        assertThat(de.format(Edtf.parse("2020/2021"))).isEqualTo("2020 bis 2021");
+        assertThat(de.format(Edtf.parse("../2020"))).isEqualTo("vor 2020");
+    }
+
+    @Test
+    void germanMonthUsesLocaleMonthNames() {
+        EdtfFormatter de = EdtfFormatter.forLocale(Locale.GERMAN);
+        // java.time supplies the month name in German automatically.
+        assertThat(de.format(Edtf.parse("2020-05"))).isEqualTo("Mai 2020");
+    }
+
+    @Test
+    void frenchQualifier() {
+        EdtfFormatter fr = EdtfFormatter.forLocale(Locale.FRENCH);
+        assertThat(fr.format(Edtf.parse("2020~"))).isEqualTo("vers 2020");
+    }
+
+    @Test
+    void frenchInterval() {
+        EdtfFormatter fr = EdtfFormatter.forLocale(Locale.FRENCH);
+        assertThat(fr.format(Edtf.parse("2020/2021"))).isEqualTo("de 2020 \u00e0 2021");
+    }
+
+    @Test
+    void spanishCenturyAndDecade() {
+        EdtfFormatter es = EdtfFormatter.forLocale(new Locale("es"));
+        assertThat(es.format(Edtf.parse("199"))).isEqualTo("los a\u00f1os 1990");
+        assertThat(es.format(Edtf.parse("20"))).isEqualTo("los a\u00f1os 2000");
+    }
+
+    @Test
+    void italianBceYear() {
+        EdtfFormatter it = EdtfFormatter.forLocale(Locale.ITALIAN);
+        assertThat(it.format(Edtf.parse("-0044"))).isEqualTo("44 a.C.");
+    }
+
+    @Test
+    void japaneseSeason() {
+        EdtfFormatter ja = EdtfFormatter.forLocale(Locale.JAPANESE);
+        assertThat(ja.format(Edtf.parse("2020-21"))).isEqualTo("2020\u5e74\u7b2c1\u56db\u534a\u671f");
+    }
+
+    @Test
+    void unknownLocaleFallsBackToDefaultBundle() {
+        // Klingon hasn't been added; should fall back to root (English).
+        EdtfFormatter kl = EdtfFormatter.forLocale(new Locale("tlh"));
+        assertThat(kl.format(Edtf.parse("2020?"))).isEqualTo("2020 (uncertain)");
+    }
 }

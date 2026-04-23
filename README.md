@@ -12,8 +12,8 @@ Format (EDTF)][edtf] strings, per **ISO 8601-2:2019** (with Amendment 1,
 This is a port of the JavaScript library [edtf.js][edtf-js] to the JVM,
 targeting Java 17+ with zero runtime dependencies.
 
-> **Status**: First public release (0.2.0). Available on Maven
-> Central.
+> **Status**: Latest release `0.3.0`. Available on Maven Central
+> (since `0.2.0`).
 
 ## Quick start
 
@@ -37,21 +37,39 @@ Available on Maven Central as of `0.2.0`.
 <dependency>
     <groupId>io.github.openhistoricalmap</groupId>
     <artifactId>edtf</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'io.github.openhistoricalmap:edtf:0.2.0'
+implementation 'io.github.openhistoricalmap:edtf:0.3.0'
 ```
 
-### Ant + Ivy (JOSM plugins)
+### Ant + Ivy
+
+For Ant projects that resolve dependencies via [Apache Ivy][ivy].
+Drop this into the `<dependencies>` block of your `ivy.xml`:
 
 ```xml
-<dependency org="io.github.openhistoricalmap" name="edtf" rev="0.2.0"/>
+<dependency org="io.github.openhistoricalmap" name="edtf" rev="0.3.0"/>
 ```
+
+The default Ivy resolver chain pulls from Maven Central
+(`repo1.maven.org`), so no additional `ivysettings.xml` is needed
+in most cases. If you maintain a custom resolver chain, ensure
+Maven Central is reachable.
+
+A complete worked example lives at [`smoke/`](smoke/) in this
+repository: a self-contained Ant project (`build.xml` + `ivy.xml` +
+`src/Smoke.java`) that resolves the published artefact, compiles
+against it, runs a tiny program, and asserts on the output.
+[`.github/workflows/smoke.yml`](.github/workflows/smoke.yml) runs
+it daily as a regression check &mdash; the same setup any
+downstream Ant consumer can crib from.
+
+[ivy]: https://ant.apache.org/ivy/
 
 ## EDTF coverage
 
