@@ -50,12 +50,20 @@ implementation 'io.github.openhistoricalmap:edtf:0.1.0'
 
 ## EDTF coverage
 
-| Level | Description                                       | Status         |
-|-------|---------------------------------------------------|----------------|
-| 0     | ISO 8601-1 dates, times, intervals                | Planned v0.1   |
-| 1     | Uncertain / approximate / unspecified markers     | Planned v0.1   |
-| 2     | Sets, lists, partial masking, decade / Y-notation | Planned v0.2   |
-| 3     | Experimental season qualifiers, season intervals  | Planned v0.3   |
+| Level | Description                                        | Status                 |
+|-------|----------------------------------------------------|------------------------|
+| 0     | ISO 8601-1 dates, datetimes, centuries             | v0.1 &mdash; done      |
+| 1     | Uncertain / approximate / unspecified, Y-notation, | v0.1 &mdash; done      |
+|       | seasons, open / unknown intervals                  |                        |
+| 2     | Sets, lists, partial masking, decades, significant | Planned v0.2           |
+|       | digits, exponential years                          |                        |
+| 3     | Experimental L3 season qualifiers, season-on-both- | Planned v0.3           |
+|       | sides intervals                                    |                        |
+
+Comparison (`compareTo`, `covers`) and epoch-millisecond bounds
+(`min` / `max`) are implemented for every supported type. Canonical
+string rendering matches {@code edtf.js} for parity; see
+`ATTRIBUTION.md` for documented deviations.
 
 Formatting and localization land in v0.3+ with English first; additional
 locales contributed via [Transifex](https://app.transifex.com/).
