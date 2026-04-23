@@ -14,7 +14,7 @@
 // clone it alongside).
 import edtf from '../edtf.js/index.js';
 
-const INPUTS = [
+const LEVEL0 = [
   // Year
   '2020', '2019', '1999', '0000', '0001', '-0001', '-0044', '-9999', '9999',
   // Year-month
@@ -39,13 +39,35 @@ const INPUTS = [
   '20', '00', '19', '-01', '-05', '-99',
 ];
 
-function emit(input) {
+const LEVEL1 = [
+  // Qualified dates (trailing UA)
+  '2020?', '2020~', '2020%',
+  '2020-05?', '2020-05~', '2020-05%',
+  '2020-05-15?', '2020-05-15~', '2020-05-15%',
+  // Unspecified digits: year-only (progressive)
+  'XXXX', '201X', '20XX',
+  // year-month
+  '2020-XX', 'XXXX-XX',
+  // year-month-day
+  '2020-05-XX', '2020-XX-XX', 'XXXX-XX-XX',
+  // Y-notation
+  'Y10000', 'Y-10000', 'Y99999',
+  // L1 seasons
+  '2020-21', '2020-22', '2020-23', '2020-24', '1999-24',
+  // Intervals
+  '2020/2021', '1950/1999', '2020-05/2020-06',
+  '2020/..', '../2020', '../..', '/2020', '2020/',
+  '2020?/2021', '2020/2021?',
+];
+
+function emit(input, level) {
   try {
-    const r = edtf(input, { level: 0 });
+    const r = edtf(input, { level });
     const row = [
       input,
       r.type,
-      0,                  // all entries here are Level 0
+      // r.level may be undefined; coerce sensibly
+      (r.level !== undefined ? r.level : level),
       r.min,
       r.max,
       r.toEDTF(),
@@ -56,5 +78,12 @@ function emit(input) {
   }
 }
 
+const [,, which = 'all'] = process.argv;
+
 console.log(['input', 'type', 'level', 'min', 'max', 'edtf'].join('\t'));
-for (const input of INPUTS) emit(input);
+if (which === 'all' || which === 'level0') {
+  for (const input of LEVEL0) emit(input, 0);
+}
+if (which === 'all' || which === 'level1') {
+  for (const input of LEVEL1) emit(input, 1);
+}
