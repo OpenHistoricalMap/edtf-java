@@ -1,0 +1,63 @@
+input	type	level	min	max	edtf	valid
+# Year 0000 (= 1 BCE per proleptic ISO)
+0000	Date	0	-62167219200000	-62135596800001	0000	VALID
+# BCE years
+-0001	Date	0	-62198755200000	-62167219200001	-0001	VALID
+-9999	Date	0	-377705116800000	-377673580800001	-9999	VALID
+# Grammar forbids -0000 (no positive_year leading with 0000)
+-0000	Date	0	0	0	0000	INVALID
+# Year 0000 with month + day
+0000-01-01	Date	0	-62167219200000	-62167132800001	0000-01-01	VALID
+# Leap-year Feb 29 boundaries.
+# Note: per EDTF grammar Feb 29 syntactically parses for any year;
+# 1900-02-29 and 2019-02-29 are accepted by the parser as round-trip
+# valid, although calling min() / max() on them will throw because
+# java.time rejects the impossible date. We only check round-trip
+# round-tripping here, not bounds.
+1900-02-29	Date	0	0	0	1900-02-29	VALID
+2000-02-29	Date	0	951782400000	951868799999	2000-02-29	VALID
+2020-02-29	Date	0	1582934400000	1583020799999	2020-02-29	VALID
+2019-02-29	Date	0	0	0	2019-02-29	VALID
+# Months with limited day ranges
+2020-04-31	Date	0	0	0	0	INVALID
+2020-06-31	Date	0	0	0	0	INVALID
+2020-11-31	Date	0	0	0	0	INVALID
+# Unicode minus sign U+2212 in offset
+2020-05-01T10:30:00−05:00	Date	0	1588343400000	1588343400000	2020-05-01T15:30:00.000Z	VALID
+# Boundary timezone offsets
+2020-05-01T00:00:00+14:00	Date	0	1588255200000	1588255200000	2020-04-30T10:00:00.000Z	VALID
+2020-05-01T00:00:00-12:00	Date	0	1588377600000	1588377600000	2020-05-01T12:00:00.000Z	VALID
+# Timezone offset out of range
+2020-05-01T00:00:00+15:00	Date	0	0	0	0	INVALID
+2020-05-01T00:00:00-13:00	Date	0	0	0	0	INVALID
+# 24:00:00 special form
+2020-05-01T24:00:00Z	Date	0	1588377600000	1588377600000	2020-05-02T00:00:00.000Z	VALID
+2020-05-01T24:30:00Z	Date	0	0	0	0	INVALID
+# Y-notation: 5+ digits required after the Y prefix.
+# Values up to ±290 million are representable as long-epoch-ms;
+# beyond that, parsing succeeds but min() / max() throw
+# ArithmeticException. See L1ParserTest for that overflow path.
+Y100000	Year	1	2932896000000	2964431999999	Y100000	VALID
+Y-100000	Year	1	0	0	Y-100000	VALID
+Y1000000	Year	1	0	0	Y1000000	VALID
+Y-10000	Year	1	-377705116800000	-377673580800001	Y-10000	VALID
+# Y-notation requires 5+ digits
+Y1234	Year	1	0	0	0	INVALID
+# All-X mask
+XXXX	Date	1	-62167219200000	253402300799999	XXXX	VALID
+XXXX-XX-XX	Date	1	-62167219200000	253402300799999	XXXX-XX-XX	VALID
+# Empty / whitespace
+	Date	0	0	0	0	INVALID
+ 2020	Date	0	0	0	0	INVALID
+2020 	Date	0	0	0	0	INVALID
+# Mismatched brackets
+[2020}	Set	2	0	0	0	INVALID
+{2020]	List	2	0	0	0	INVALID
+# Empty set / list (no markers, no members)
+[]	Set	2	0	0	0	INVALID
+{}	List	2	0	0	0	INVALID
+# Set with single member
+[2020]	Set	2	1577836800000	1609459199999	[2020]	VALID
+# Non-digit garbage
+abcd	Date	0	0	0	0	INVALID
+2020-AB	Date	0	0	0	0	INVALID

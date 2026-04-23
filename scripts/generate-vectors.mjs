@@ -105,3 +105,91 @@ if (which === 'all' || which === 'level1') {
 if (which === 'all' || which === 'level2') {
   for (const input of LEVEL2) emit(input, 2);
 }
+
+// Library of Congress EDTF specification examples, drawn from the
+// public spec page (https://www.loc.gov/standards/datetime/) and the
+// LoC NetDev mirror (lcnetdev.github.io/standards/datetime/edtf.html).
+// Same TSV shape as the level files so the same harness handles them.
+const LOC_SPEC = [
+  // Level 0 — Date
+  '1985-04-12', '1985-04', '1985',
+  // Level 0 — Date and Time
+  // Note: the no-TZ form `1985-04-12T23:20:30` is excluded because
+  // edtf.js interprets it as machine-local time (so the generated
+  // bounds depend on the runner's timezone) whereas this library
+  // treats it as UTC. Both are defensible; only the explicit-TZ
+  // forms are deterministic across platforms.
+  '1985-04-12T23:20:30Z',
+  '1985-04-12T23:20:30-04:00',
+  '1985-04-12T23:20:30+04:30',
+  // Level 0 — Time interval
+  '1964/2008',
+  '2004-06/2006-08',
+  '2004-02-01/2005-02-08',
+  '2004-02-01/2005-02',
+  '2004-02-01/2005',
+  '2005/2006-02',
+  // Level 1 — Letter-prefixed calendar year
+  // (Y170000002 / Y-170000002 from the LoC examples are excluded
+  // because edtf.js can't represent them via JS Date and emits
+  // NaN bounds, whereas the BigInteger-backed Java implementation
+  // succeeds; the value is identical, the parity assertion is
+  // not.)
+  'Y10000', 'Y-10000',
+  // Level 1 — Seasons
+  '2001-21',  // Spring, 2001
+  // Level 1 — Qualification of a date (entire)
+  '1984?', '2004-06~', '2004-06-11%',
+  // Level 1 — Unspecified digit(s)
+  '201X', '20XX', '2004-XX',
+  '1985-04-XX', '1985-XX-XX',
+  // Level 1 — Extended interval
+  '1985-04-12/..',
+  '1985-04/..',
+  '1985/..',
+  '../1985-04-12',
+  '/1985-04-12',
+  '1985-04-12/',
+  // Level 2 — Set representations
+  // Sets with consecutive (start..end) members are excluded because
+  // edtf.js's list-max bound returns start.max while this library
+  // returns end.max (a documented v0.2 divergence — semantically
+  // correct here, parity-incompatible).
+  '[..1760-12-03]',
+  '[1760-12..]',
+  '[1667,1760-12]',
+  '{1960,1961-12}',
+];
+
+if (which === 'all' || which === 'loc-spec') {
+  for (const input of LOC_SPEC) emit(input, 2);
+}
+
+// ISO 8601-2:2019 example expressions, restricted to those that fall
+// within the EDTF / LoC profile this library implements (i.e., the
+// implicit forms — explicit `Y`, `M`, `D`, `J`, `C` suffix forms from
+// ISO are out of scope). Each input is taken from a quoted example
+// in the standard.
+const ISO_8601_2 = [
+  // 4.4.1.2 — calendar year (negative / zero)
+  '0000', '-0001',
+  // 4.x — basic dates
+  '1985', '1985-04', '1985-04-12',
+  // 5.x — qualifications
+  '1985-04-12?', '1985-04?',
+  '1984~',
+  // 5.x — unspecified digits
+  '1985-04-XX', '1985-XX-XX',
+  // 6.x — intervals (open-ended)
+  '1985/..', '1985-04/..', '1985-04-12/..',
+  '../1985-04-12', '../1985-04', '../1985',
+  '1985-04-12/', '/1985-04-12',
+  '1964/2008',
+  // 6.x — qualified intervals
+  '1984~/2004-06',
+  '1984/2004-06~',
+];
+
+if (which === 'all' || which === 'iso-8601-2') {
+  for (const input of ISO_8601_2) emit(input, 2);
+}
