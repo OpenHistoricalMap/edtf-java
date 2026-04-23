@@ -116,15 +116,25 @@ Transifex rather than patching the file directly.
 
 ## Testing strategy
 
-- **Unit tests** per class (e.g., `EdtfDateTest`).
-- **Generated vectors** under `src/test/resources/vectors/` regenerated
-  from the upstream library's test cases; see
-  `GeneratedVectorsTest`.
-- **Spec vectors**: `loc-spec.tsv` (LoC examples) and `iso8601-2.tsv`
-  (ISO clause examples) — the acceptance bar.
-- **Edge cases**: `edge-cases.tsv` — worst-case, Unicode, boundary, and
-  deliberately-invalid inputs. Please add rows here when you discover new
-  pathological inputs.
+- **Unit tests** per class (e.g., `EdtfDateTest`,
+  `L0ParserTest`, `L1ParserTest`, `L2ParserTest`).
+- **Generated parity vectors** under
+  `src/test/resources/vectors/{level0,level1,level2}.tsv`,
+  produced by `scripts/generate-vectors.mjs` from the upstream
+  edtf.js. `GeneratedVectorsTest` reads them and asserts that
+  `Edtf.parse(...)` agrees with edtf.js on type, level, min, max,
+  and round-trip rendering.
+- **Planned for a future release**:
+  - `loc-spec.tsv` &mdash; hand-curated rows from the
+    Library of Congress EDTF spec examples.
+  - `iso8601-2.tsv` &mdash; rows from the ISO 8601-2:2019 (and
+    Amendment 1, 2025) clause examples.
+  - `edge-cases.tsv` &mdash; worst-case Unicode, boundary, and
+    deliberately-invalid inputs.
+
+  These three are not in the repository yet; if you write any of
+  them, drop them in `src/test/resources/vectors/` and add a
+  matching `@TestFactory` method in `GeneratedVectorsTest`.
 
 ## Security
 

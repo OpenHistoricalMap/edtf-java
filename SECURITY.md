@@ -18,8 +18,11 @@ Preferred channel: open a private report via GitHub Security Advisories
 on this repository
 (<https://github.com/OpenHistoricalMap/edtf-java/security/advisories/new>).
 
-Alternative: email a project maintainer directly. A contact address will
-be added here before the first stable release.
+Alternative: email a project maintainer directly. A dedicated
+security contact address will be added here ahead of the 1.0.0
+release. Until then, please use the GitHub Security Advisory
+channel above &mdash; it routes to the repository's owners and is
+private.
 
 ## What to include
 

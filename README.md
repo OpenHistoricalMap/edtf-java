@@ -24,7 +24,7 @@ System.out.println(t.max());          // epoch ms for 2020-12-31T23:59:59.999Z
 
 ## Dependency
 
-Once published:
+Available on Maven Central as of `0.2.0`.
 
 ### Maven
 
@@ -73,11 +73,8 @@ implementation 'io.github.openhistoricalmap:edtf:0.2.0'
 
 Comparison (`compareTo`, `covers`) and epoch-millisecond bounds
 (`min` / `max`) are implemented for every supported type. Canonical
-string rendering matches edtf.js for parity; see `ATTRIBUTION.md` for
-documented deviations.
-
-Formatting and localization land in v0.3+ with English first; additional
-locales contributed via [Transifex](https://app.transifex.com/).
+string rendering matches edtf.js for parity; see
+[`CHANGELOG.md`](CHANGELOG.md) for the four documented deviations.
 
 ## Building
 
