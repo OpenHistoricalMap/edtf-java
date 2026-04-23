@@ -23,6 +23,6 @@ public class Smoke {
         // Cover an interval too.
         EdtfTemporal i = Edtf.parse("2020/..");
         System.out.println("interval canonical: " + i.toEdtfString());
-        System.out.println("interval upper-open: " + i.upper().getClass().getSimpleName());
+        System.out.println("interval type: " + i.type());
     }
 }
