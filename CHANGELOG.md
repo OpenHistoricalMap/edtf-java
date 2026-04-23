@@ -4,7 +4,58 @@ All notable changes to this project are documented here. The format is
 loosely based on [Keep a Changelog](https://keepachangelog.com/) and
 this project follows [Semantic Versioning](https://semver.org/).
 
-## [0.3.0] &mdash; unreleased
+## [0.3.1] &mdash; unreleased
+
+Dependency-and-tooling release. The five seeded locale bundles
+(German, French, Spanish, Italian, Japanese) are the only
+user-visible behaviour change. The publishing-plugin upgrade is
+the headline reason this release exists separately rather than
+being rolled into the next feature release: it isolates the
+plugin upgrade so any release-time regression has a single
+suspect.
+
+### Added
+
+- **Five locale bundles** under
+  `src/main/resources/io/github/openhistoricalmap/edtf/format/`:
+  `messages_de`, `messages_es`, `messages_fr`, `messages_it`,
+  `messages_ja`. Bootstrap translations seeded for the next
+  Transifex sync; future updates flow through `tx pull` /
+  `tx push` rather than direct file edits.
+- README's Ant + Ivy section reframed as the canonical reference
+  for any downstream Ant consumer (not JOSM-specific), with a
+  pointer at `smoke/` as a complete worked example.
+
+### Changed
+
+- **`actions/checkout` 4 &rarr; 6** and **`actions/setup-java` 4
+  &rarr; 5** in all three GitHub Actions workflows; both now
+  natively use Node.js 24 so the redundant
+  `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` env var was removed.
+- **`junit-bom` 5.11.4 &rarr; 6.0.3.** All 367 tests still pass
+  unchanged (verified locally before the merge).
+- **`central-publishing-maven-plugin` 0.7.0 &rarr; 0.10.0.** The
+  primary motivation for cutting this release as a standalone
+  patch &mdash; it isolates the publish-time plugin upgrade from
+  any future feature work.
+- **`maven-source-plugin` 3.3.1 &rarr; 3.4.0**,
+  **`maven-surefire-plugin` 3.5.3 &rarr; 3.5.5**,
+  **`maven-gpg-plugin` 3.2.7 &rarr; 3.2.8**.
+- README dependency snippets updated from `0.2.0` to `0.3.0`.
+
+### Fixed
+
+- **Smoke test** at `smoke/src/Smoke.java` was calling
+  `i.upper()` on an `EdtfTemporal`-typed variable, which doesn't
+  compile against the published artefact (`upper()` is on the
+  permitted subtype `EdtfInterval`, not on the sealed interface).
+  Replaced with `i.type()` so the smoke source stays on the
+  stable-since-0.2.0 API surface and works against any future
+  release without modification.
+
+[0.3.1]: https://github.com/OpenHistoricalMap/edtf-java/releases/tag/v0.3.1
+
+## [0.3.0] &mdash; 2026-04-23
 
 Closes the three v0.2.0 follow-up issues. Adds locale-aware
 formatting, a real Ant/Ivy consumption smoke test, and three
