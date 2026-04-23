@@ -117,24 +117,23 @@ Transifex rather than patching the file directly.
 ## Testing strategy
 
 - **Unit tests** per class (e.g., `EdtfDateTest`,
-  `L0ParserTest`, `L1ParserTest`, `L2ParserTest`).
+  `L0ParserTest`, `L1ParserTest`, `L2ParserTest`,
+  `EdtfFormatterTest`).
 - **Generated parity vectors** under
   `src/test/resources/vectors/{level0,level1,level2}.tsv`,
   produced by `scripts/generate-vectors.mjs` from the upstream
   edtf.js. `GeneratedVectorsTest` reads them and asserts that
   `Edtf.parse(...)` agrees with edtf.js on type, level, min, max,
   and round-trip rendering.
-- **Planned for a future release**:
-  - `loc-spec.tsv` &mdash; hand-curated rows from the
-    Library of Congress EDTF spec examples.
-  - `iso8601-2.tsv` &mdash; rows from the ISO 8601-2:2019 (and
-    Amendment 1, 2025) clause examples.
-  - `edge-cases.tsv` &mdash; worst-case Unicode, boundary, and
-    deliberately-invalid inputs.
-
-  These three are not in the repository yet; if you write any of
-  them, drop them in `src/test/resources/vectors/` and add a
-  matching `@TestFactory` method in `GeneratedVectorsTest`.
+- **Spec vectors**: `loc-spec.tsv` (Library of Congress EDTF
+  examples) and `iso8601-2.tsv` (ISO 8601-2:2019 standard
+  examples) under the same path, also driven by
+  `GeneratedVectorsTest` `@TestFactory` methods.
+- **Edge cases**: `edge-cases.tsv` &mdash; worst-case inputs with
+  a 7th `valid` column. INVALID rows assert
+  `EdtfParseException`; VALID rows round-trip. Add new
+  pathological inputs here as you find them; the harness picks
+  them up automatically on the next test run.
 
 ## Security
 
