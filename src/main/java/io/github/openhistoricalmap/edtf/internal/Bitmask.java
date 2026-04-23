@@ -254,7 +254,7 @@ public final class Bitmask {
         if (ymd.length < 2 || isEmpty(ymd[1])) {
             return new int[]{year};
         }
-        int month = Integer.parseInt(ymd[1]) - 1;
+        int month = parseWithXAsZero(ymd[1]) - 1;
 
         int monthTest = test(MONTH);
         if (monthTest == MONTH) {
@@ -269,7 +269,7 @@ public final class Bitmask {
         if (ymd.length < 3 || isEmpty(ymd[2])) {
             return new int[]{year, month};
         }
-        int day = Integer.parseInt(ymd[2]);
+        int day = parseWithXAsZero(ymd[2]);
 
         int dayTest = test(DAY);
         if (dayTest == DAY) {
@@ -309,7 +309,7 @@ public final class Bitmask {
         if (ymd.length < 2 || ymd[1] == null) {
             return new int[]{year};
         }
-        int month = Integer.parseInt(ymd[1]) - 1;
+        int month = parseWithXAsZero(ymd[1]) - 1;
 
         int monthTest = test(MONTH);
         if (monthTest == MONTH || monthTest == XM) {
@@ -321,7 +321,7 @@ public final class Bitmask {
         if (ymd.length < 3 || isEmpty(ymd[2])) {
             return new int[]{year, month};
         }
-        int day = Integer.parseInt(ymd[2]);
+        int day = parseWithXAsZero(ymd[2]);
 
         int dayTest = test(DAY);
         if (dayTest == DAY) {
@@ -540,6 +540,21 @@ public final class Bitmask {
 
     private static boolean isEmpty(String s) {
         return s == null || s.isEmpty();
+    }
+
+    /**
+     * Parse an integer allowing {@code X}/{@code x} characters that
+     * are treated as zero. Matches edtf.js's reliance on JS
+     * {@code Number("XX") == NaN} being silently recovered by the
+     * bitmask-guided bound logic that runs afterward.
+     */
+    private static int parseWithXAsZero(String s) {
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            sb.append((ch == 'X' || ch == 'x') ? '0' : ch);
+        }
+        return Integer.parseInt(sb.toString());
     }
 
     private static boolean leap(int year) {

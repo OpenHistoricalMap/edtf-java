@@ -3,41 +3,80 @@ package io.github.openhistoricalmap.edtf.types;
 import io.github.openhistoricalmap.edtf.EdtfLevel;
 import io.github.openhistoricalmap.edtf.EdtfTemporal;
 import io.github.openhistoricalmap.edtf.EdtfType;
+import java.util.Objects;
 
 /**
- * A date / date interval with two endpoints, which may be bounded,
- * open ({@code ..}), or unknown.
+ * An interval with two {@link Endpoint}s. Each endpoint is independently
+ * {@link Endpoint.Bounded}, {@link Endpoint.Open}, or
+ * {@link Endpoint.Unknown}.
  *
- * <p><strong>Stub.</strong> The endpoint sealed type and interval
- * semantics land in Phase 4 (L1 intervals) and Phase 6 (L2 intervals).
+ * <p>Bounds semantics: when an endpoint is open the corresponding
+ * {@link #min()} / {@link #max()} returns {@link Long#MIN_VALUE} /
+ * {@link Long#MAX_VALUE}. When an endpoint is unknown the corresponding
+ * method throws {@link IllegalStateException} &mdash; callers should
+ * inspect {@link #lower()} / {@link #upper()} with the
+ * {@code isBounded} / {@code isOpen} / {@code isUnknown} convenience
+ * methods on {@link Endpoint}.
+ *
+ * <p>The level of the interval is the maximum level of its endpoints.
  */
 public final class EdtfInterval implements EdtfTemporal {
 
-    private static final String NOT_YET =
-        "EdtfInterval is a Phase 2 stub; full behavior lands in Phase 4+";
+    private final Endpoint lower;
+    private final Endpoint upper;
 
-    @Override
-    public EdtfType type() {
-        return EdtfType.INTERVAL;
+    private EdtfInterval(Endpoint lower, Endpoint upper) {
+        this.lower = Objects.requireNonNull(lower, "lower");
+        this.upper = Objects.requireNonNull(upper, "upper");
     }
 
-    @Override
-    public EdtfLevel level() {
-        throw new UnsupportedOperationException(NOT_YET);
+    public static EdtfInterval of(Endpoint lower, Endpoint upper) {
+        return new EdtfInterval(lower, upper);
     }
 
-    @Override
-    public long min() {
-        throw new UnsupportedOperationException(NOT_YET);
+    public Endpoint lower() { return lower; }
+
+    public Endpoint upper() { return upper; }
+
+    @Override public EdtfType type() { return EdtfType.INTERVAL; }
+
+    @Override public EdtfLevel level() {
+        EdtfLevel lo = levelOf(lower);
+        EdtfLevel hi = levelOf(upper);
+        return lo.ordinal() >= hi.ordinal() ? lo : hi;
     }
 
-    @Override
-    public long max() {
-        throw new UnsupportedOperationException(NOT_YET);
+    private static EdtfLevel levelOf(Endpoint e) {
+        if (e instanceof Endpoint.Bounded b) {
+            return b.value().level();
+        }
+        // Open / Unknown endpoints are themselves L1 features.
+        return EdtfLevel.L1;
     }
 
-    @Override
-    public String toEdtfString() {
-        throw new UnsupportedOperationException(NOT_YET);
+    @Override public long min() {
+        if (lower instanceof Endpoint.Bounded b) return b.value().min();
+        if (lower instanceof Endpoint.Open) return Long.MIN_VALUE;
+        throw new IllegalStateException("interval lower endpoint is unknown");
     }
+
+    @Override public long max() {
+        if (upper instanceof Endpoint.Bounded b) return b.value().max();
+        if (upper instanceof Endpoint.Open) return Long.MAX_VALUE;
+        throw new IllegalStateException("interval upper endpoint is unknown");
+    }
+
+    @Override public String toEdtfString() {
+        return lower.toEdtfFragment() + "/" + upper.toEdtfFragment();
+    }
+
+    @Override public String toString() { return toEdtfString(); }
+
+    @Override public boolean equals(Object o) {
+        return o instanceof EdtfInterval i
+            && Objects.equals(i.lower, lower)
+            && Objects.equals(i.upper, upper);
+    }
+
+    @Override public int hashCode() { return Objects.hash(lower, upper); }
 }
