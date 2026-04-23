@@ -176,7 +176,8 @@ class L1ParserTest {
     @ParameterizedTest
     @ValueSource(strings = {
         "Y1234",              // Y with 4 digits - L0 range, invalid
-        "2020-25",            // season code out of L1 range (25 is L2/L3)
+        // 2020-25 used to be rejected at L1 but is now an L2 extended
+        // season (hemispheric variant). Moved to L2ParserTest.
         "2020?~",             // mixing UA markers outside of %
         "YYYY",               // Y_YY is year mask, not Y-notation
         "2020//2021",         // double slash
