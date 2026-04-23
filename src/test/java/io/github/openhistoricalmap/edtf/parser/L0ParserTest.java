@@ -114,7 +114,8 @@ class L0ParserTest {
     @ParameterizedTest
     @ValueSource(strings = {
         "",                  // empty
-        "202",               // incomplete year
+        // 202 used to be rejected as incomplete year; L2 now accepts it
+        // as a 3-digit decade notation.
         "2020-",             // trailing dash, no month
         "2020-13",           // month out of range
         "2020-02-30",        // invalid day in Feb

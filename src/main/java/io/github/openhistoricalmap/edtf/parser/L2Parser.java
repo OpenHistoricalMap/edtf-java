@@ -5,6 +5,7 @@ import io.github.openhistoricalmap.edtf.EdtfParseException;
 import io.github.openhistoricalmap.edtf.EdtfTemporal;
 import io.github.openhistoricalmap.edtf.internal.Bitmask;
 import io.github.openhistoricalmap.edtf.types.EdtfDate;
+import io.github.openhistoricalmap.edtf.types.EdtfDecade;
 import io.github.openhistoricalmap.edtf.types.EdtfList;
 import io.github.openhistoricalmap.edtf.types.EdtfSet;
 import io.github.openhistoricalmap.edtf.types.ListMember;
@@ -41,7 +42,68 @@ public final class L2Parser {
         char first = input.charAt(0);
         if (first == '[') return parseSet(input);
         if (first == '{') return parseList(input);
+
+        // L2 extended season: YYYY-SS where SS is 25-41
+        if (looksLikeExtendedSeason(input)) {
+            return parseExtendedSeason(input);
+        }
+
+        // L2 decade: 3-digit form, optional sign, optional UA
+        EdtfDecade decade = tryParseDecade(input);
+        if (decade != null) return decade;
+
         return parseMaskedDate(input);
+    }
+
+    /**
+     * Try to parse the input as an L2 decade ({@code 199}, {@code -199},
+     * {@code 199?}, {@code 199~}, {@code 199%}). Returns {@code null}
+     * if the input does not match; lets the caller fall through to
+     * other L2 shapes.
+     */
+    private static EdtfDecade tryParseDecade(String input) {
+        String s = input;
+        boolean uncertain = false;
+        boolean approximate = false;
+        char last = s.charAt(s.length() - 1);
+        if (last == '?') { uncertain = true; s = s.substring(0, s.length() - 1); }
+        else if (last == '~') { approximate = true; s = s.substring(0, s.length() - 1); }
+        else if (last == '%') {
+            uncertain = true; approximate = true;
+            s = s.substring(0, s.length() - 1);
+        }
+        int sign = 1;
+        if (!s.isEmpty() && s.charAt(0) == '-') {
+            sign = -1;
+            s = s.substring(1);
+        }
+        if (s.length() != 3) return null;
+        for (int i = 0; i < 3; i++) {
+            if (!Character.isDigit(s.charAt(i))) return null;
+        }
+        int value = Integer.parseInt(s) * sign;
+        return EdtfDecade.of(value, uncertain, approximate);
+    }
+
+    private static boolean looksLikeExtendedSeason(String input) {
+        // YYYY-SS (7 chars) where SS is in 25-41
+        if (input.length() != 7) return false;
+        if (input.charAt(4) != '-') return false;
+        for (int i = 0; i < 4; i++) {
+            if (!Character.isDigit(input.charAt(i))) return false;
+        }
+        if (!Character.isDigit(input.charAt(5)) || !Character.isDigit(input.charAt(6))) {
+            return false;
+        }
+        int code = Integer.parseInt(input.substring(5, 7));
+        return code >= 25 && code <= 41;
+    }
+
+    private static io.github.openhistoricalmap.edtf.types.EdtfSeason parseExtendedSeason(
+            String input) {
+        int year = Integer.parseInt(input.substring(0, 4));
+        int code = Integer.parseInt(input.substring(5, 7));
+        return io.github.openhistoricalmap.edtf.types.EdtfSeason.ofExtended(year, code);
     }
 
     /**
@@ -202,13 +264,23 @@ public final class L2Parser {
                     throw new EdtfParseException(
                         "empty list member", input, 0);
                 }
-                if (trimmed.contains("..")) {
-                    throw new EdtfParseException(
-                        "consecutive (start..end) members are not yet supported",
-                        input, 0);
+                int dd = trimmed.indexOf("..");
+                if (dd >= 0) {
+                    // Consecutive: start..end (inclusive range).
+                    String startStr = trimmed.substring(0, dd).strip();
+                    String endStr = trimmed.substring(dd + 2).strip();
+                    if (startStr.isEmpty() || endStr.isEmpty()) {
+                        throw new EdtfParseException(
+                            "consecutive range must have both endpoints",
+                            input, 0);
+                    }
+                    EdtfTemporal start = Edtf.parse(startStr);
+                    EdtfTemporal end = Edtf.parse(endStr);
+                    members.add(new ListMember.Consecutive(start, end));
+                } else {
+                    EdtfTemporal value = Edtf.parse(trimmed);
+                    members.add(new ListMember.Single(value));
                 }
-                EdtfTemporal value = Edtf.parse(trimmed);
-                members.add(new ListMember.Single(value));
             }
         }
         return new ParsedList(members, earlier, later);

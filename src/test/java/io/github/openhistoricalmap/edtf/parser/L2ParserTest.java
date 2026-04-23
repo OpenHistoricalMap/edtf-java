@@ -10,7 +10,9 @@ import io.github.openhistoricalmap.edtf.EdtfTemporal;
 import io.github.openhistoricalmap.edtf.EdtfType;
 import io.github.openhistoricalmap.edtf.types.EdtfDate;
 import io.github.openhistoricalmap.edtf.types.EdtfList;
+import io.github.openhistoricalmap.edtf.types.EdtfSeason;
 import io.github.openhistoricalmap.edtf.types.EdtfSet;
+import io.github.openhistoricalmap.edtf.types.ListMember;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -88,12 +90,11 @@ class L2ParserTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-        "[]",                        // empty set
+        "[]",                        // empty set (no markers, no members)
         "{}",                        // empty list
         "[2020",                     // unterminated set
         "2020]",                     // missing open
         "[2020,,2021]",              // empty member
-        "{2019..2021}",              // consecutive range not supported yet
     })
     void rejectsInvalid(String input) {
         assertThatThrownBy(() -> Edtf.parse(input))
@@ -101,9 +102,69 @@ class L2ParserTest {
     }
 
     @Test
+    void consecutiveRangeInsideList() {
+        EdtfList l = (EdtfList) Edtf.parse("{2019..2021}");
+        assertThat(l.members()).hasSize(1);
+        assertThat(l.members().get(0)).isInstanceOf(ListMember.Consecutive.class);
+        assertThat(l.toEdtfString()).isEqualTo("{2019..2021}");
+    }
+
+    @Test
+    void extendedSeasonCode() {
+        // Code 30 = Southern Hemisphere summer per edtf.js, Jul-Sep bounds.
+        EdtfSeason s = (EdtfSeason) Edtf.parse("2020-30");
+        assertThat(s.level()).isEqualTo(EdtfLevel.L2);
+        assertThat(s.toEdtfString()).isEqualTo("2020-30");
+    }
+
+    @Test
+    void extendedSeasonHalfYear() {
+        // Code 40 = first half of year (Jan-Jun)
+        EdtfSeason s = (EdtfSeason) Edtf.parse("2020-40");
+        assertThat(s.level()).isEqualTo(EdtfLevel.L2);
+    }
+
+    @Test
     void progressiveMaskStaysL1() {
         // 201X is progressive -> should still parse as L1
         EdtfDate d = (EdtfDate) Edtf.parse("201X");
         assertThat(d.level()).isEqualTo(EdtfLevel.L1);
+    }
+
+    @Test
+    void decadeBasic() {
+        io.github.openhistoricalmap.edtf.types.EdtfDecade d =
+            (io.github.openhistoricalmap.edtf.types.EdtfDecade) Edtf.parse("199");
+        assertThat(d.decade()).isEqualTo(199);
+        assertThat(d.firstYear()).isEqualTo(1990);
+        assertThat(d.level()).isEqualTo(EdtfLevel.L2);
+        assertThat(d.toEdtfString()).isEqualTo("199");
+    }
+
+    @Test
+    void decadeWithUncertain() {
+        io.github.openhistoricalmap.edtf.types.EdtfDecade d =
+            (io.github.openhistoricalmap.edtf.types.EdtfDecade) Edtf.parse("199?");
+        assertThat(d.uncertain()).isTrue();
+        assertThat(d.toEdtfString()).isEqualTo("199?");
+    }
+
+    @Test
+    void decadeNegative() {
+        io.github.openhistoricalmap.edtf.types.EdtfDecade d =
+            (io.github.openhistoricalmap.edtf.types.EdtfDecade) Edtf.parse("-005");
+        assertThat(d.decade()).isEqualTo(-5);
+        assertThat(d.toEdtfString()).isEqualTo("-005");
+    }
+
+    @Test
+    void consecutiveRangeBoundsCoverStartAndEnd() {
+        // Java implementation treats {start..end} as spanning from
+        // start.min through end.max, which is semantically the correct
+        // interpretation (edtf.js returns start.max for this case,
+        // which we consider a bug and diverge from).
+        EdtfList l = (EdtfList) Edtf.parse("{2019..2021}");
+        assertThat(l.min()).isEqualTo(Edtf.parse("2019").min());
+        assertThat(l.max()).isEqualTo(Edtf.parse("2021").max());
     }
 }
