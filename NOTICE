@@ -1,0 +1,8 @@
+This project is a Java implementation of EDTF concepts and includes work based on or derived from edtf.js.
+
+Original upstream project:
+edtf.js
+Copyright (c) 2016-2025 EDTF.js Authors and Contributors
+
+Additional Java implementation and project-specific code:
+Copyright (c) 2026 OpenHistoricalMap.org
