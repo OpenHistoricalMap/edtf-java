@@ -1,0 +1,35 @@
+name: Smoke (Ant + Ivy)
+
+# Resolve and exercise the published edtf artefact from a real
+# Ant + Ivy build, the same shape JOSM plugins use. Runs on a daily
+# schedule so a Maven Central propagation regression or accidental
+# artefact takedown is caught proactively.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # daily at 06:00 UTC
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install Ant
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ant ivy
+
+      - name: Run smoke test
+        working-directory: smoke
+        run: ant -lib /usr/share/java/ivy.jar test

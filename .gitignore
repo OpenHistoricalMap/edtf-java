@@ -8,6 +8,10 @@ target/
 *.log
 hs_err_pid*.log
 
+# Smoke-test generated dirs
+smoke/lib/
+smoke/build/
+
 # Test dependencies (download via apt install junit5, or fetch from Maven Central into lib/)
 lib/
 

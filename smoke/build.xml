@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Ant + Ivy smoke test for io.github.openhistoricalmap:edtf.
+
+  Resolves the published artifact from Maven Central, compiles
+  src/Smoke.java against it, runs it, and asserts on the output.
+  See README.md for prerequisites.
+-->
+<project name="edtf-java-smoke" basedir="." default="test"
+         xmlns:ivy="antlib:org.apache.ivy.ant">
+
+    <!-- Library version under test. Override with -Dedtf.version=X.Y.Z. -->
+    <property name="edtf.version" value="0.2.0"/>
+
+    <property name="lib.dir"     value="lib"/>
+    <property name="build.dir"   value="build"/>
+    <property name="src.dir"     value="src"/>
+
+    <target name="clean" description="Remove generated artefacts">
+        <delete dir="${lib.dir}"/>
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="resolve" description="Resolve via Ivy from Maven Central">
+        <mkdir dir="${lib.dir}"/>
+        <ivy:retrieve pattern="${lib.dir}/[artifact]-[revision].[ext]"
+                      sync="true"/>
+    </target>
+
+    <target name="compile" depends="resolve" description="Compile the smoke source">
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}"
+               destdir="${build.dir}"
+               includeAntRuntime="false"
+               source="17"
+               target="17"
+               release="17"
+               encoding="UTF-8">
+            <classpath>
+                <fileset dir="${lib.dir}" includes="*.jar"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="test" depends="compile"
+            description="Run the smoke program and assert its output">
+        <java classname="Smoke" fork="true" failonerror="true"
+              outputproperty="smoke.stdout">
+            <classpath>
+                <pathelement location="${build.dir}"/>
+                <fileset dir="${lib.dir}" includes="*.jar"/>
+            </classpath>
+        </java>
+        <echo>--- Smoke output ---</echo>
+        <echo>${smoke.stdout}</echo>
+
+        <condition property="smoke.passed">
+            <and>
+                <contains string="${smoke.stdout}" substring="2020-05-15"/>
+                <contains string="${smoke.stdout}" substring="May 2020"/>
+            </and>
+        </condition>
+        <fail unless="smoke.passed"
+              message="Smoke assertions failed. Output: ${smoke.stdout}"/>
+        <echo>PASSED: smoke test against io.github.openhistoricalmap:edtf:${edtf.version}</echo>
+    </target>
+</project>

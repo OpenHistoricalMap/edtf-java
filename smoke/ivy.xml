@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Ivy module descriptor for the smoke test. Mirrors the shape a
+  JOSM-plugin ivy.xml would use when declaring an edtf dependency.
+-->
+<ivy-module version="2.0">
+    <info organisation="io.github.openhistoricalmap"
+          module="edtf-java-smoke"
+          revision="${edtf.version}"
+          status="integration"/>
+
+    <configurations>
+        <conf name="default"/>
+    </configurations>
+
+    <dependencies>
+        <dependency org="io.github.openhistoricalmap"
+                    name="edtf"
+                    rev="${edtf.version}"
+                    conf="default->default"
+                    transitive="true"/>
+    </dependencies>
+</ivy-module>
