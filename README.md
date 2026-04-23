@@ -7,7 +7,7 @@ Format (EDTF)][edtf] strings, per **ISO 8601-2:2019** (with Amendment 1,
 This is a port of the JavaScript library [edtf.js][edtf-js] to the JVM,
 targeting Java 17+ with zero runtime dependencies.
 
-> **Status**: Early development (0.1.0-SNAPSHOT). Not yet published to Maven
+> **Status**: First public release (0.2.0). Available on Maven
 > Central.
 
 ## Quick start
@@ -32,20 +32,20 @@ Once published:
 <dependency>
     <groupId>io.github.openhistoricalmap</groupId>
     <artifactId>edtf</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'io.github.openhistoricalmap:edtf:0.1.0'
+implementation 'io.github.openhistoricalmap:edtf:0.2.0'
 ```
 
 ### Ant + Ivy (JOSM plugins)
 
 ```xml
-<dependency org="io.github.openhistoricalmap" name="edtf" rev="0.1.0"/>
+<dependency org="io.github.openhistoricalmap" name="edtf" rev="0.2.0"/>
 ```
 
 ## EDTF coverage
