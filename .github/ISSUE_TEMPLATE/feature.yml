@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest a new capability or an improvement
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem are you trying to solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How should this work? Sketch API, examples, behavior.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you thought about.
+
+  - type: textarea
+    id: spec
+    attributes:
+      label: Specification reference
+      description: Cite ISO 8601-2, LoC EDTF, or edtf.js behavior as relevant.
