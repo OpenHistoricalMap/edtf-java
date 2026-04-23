@@ -1,0 +1,9 @@
+[main]
+host = https://app.transifex.com
+
+[o:openhistoricalmap:p:edtf-java:r:messages]
+file_filter     = src/main/resources/io/github/openhistoricalmap/edtf/format/messages_<lang>.properties
+source_file     = src/main/resources/io/github/openhistoricalmap/edtf/format/messages.properties
+source_lang     = en
+type            = PROPERTIES
+minimum_perc    = 0
