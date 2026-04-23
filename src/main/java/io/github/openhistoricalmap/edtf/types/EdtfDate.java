@@ -129,10 +129,35 @@ public final class EdtfDate implements EdtfTemporal {
     @Override public EdtfType type() { return EdtfType.DATE; }
 
     @Override public EdtfLevel level() {
-        if (uncertain.value() != 0 || approximate.value() != 0 || unspecified.value() != 0) {
-            return EdtfLevel.L1;
-        }
-        return EdtfLevel.L0;
+        boolean hasFlags =
+            uncertain.value() != 0 || approximate.value() != 0 || unspecified.value() != 0;
+        if (!hasFlags) return EdtfLevel.L0;
+
+        // L1 masks are the "whole-field" values only: YEAR, MONTH, DAY,
+        // YM, MD, YMD, YYXX, YYYX, XXXX (= YEAR), plus 0. Any other
+        // value is an L2 partial mask.
+        if (!isL1Mask(unspecified.value())) return EdtfLevel.L2;
+
+        // L1 qualifiers are whole-date only: uncertain / approximate
+        // either 0 or YMD.
+        int u = uncertain.value();
+        int a = approximate.value();
+        if (u != 0 && u != Bitmask.YMD) return EdtfLevel.L2;
+        if (a != 0 && a != Bitmask.YMD) return EdtfLevel.L2;
+
+        return EdtfLevel.L1;
+    }
+
+    private static boolean isL1Mask(int mask) {
+        return mask == 0
+            || mask == Bitmask.YEAR
+            || mask == Bitmask.MONTH
+            || mask == Bitmask.DAY
+            || mask == Bitmask.YM
+            || mask == Bitmask.MD
+            || mask == Bitmask.YMD
+            || mask == Bitmask.YYXX
+            || mask == Bitmask.YYYX;
     }
 
     @Override public long min() {
