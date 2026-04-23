@@ -6,12 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-# Opt every JavaScript-based action into Node.js 24 ahead of the
-# 2026-06-02 default flip. The two actions used here (checkout,
-# setup-java) honour this env var.
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build:
     name: Build (Java ${{ matrix.java }})
