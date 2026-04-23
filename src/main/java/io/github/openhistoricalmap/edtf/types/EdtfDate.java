@@ -133,22 +133,28 @@ public final class EdtfDate implements EdtfTemporal {
             uncertain.value() != 0 || approximate.value() != 0 || unspecified.value() != 0;
         if (!hasFlags) return EdtfLevel.L0;
 
-        // L1 masks are the "whole-field" values only: YEAR, MONTH, DAY,
-        // YM, MD, YMD, YYXX, YYYX, XXXX (= YEAR), plus 0. Any other
-        // value is an L2 partial mask.
-        if (!isL1Mask(unspecified.value())) return EdtfLevel.L2;
+        // L1 unspecified masks are "whole-field" values only: YEAR,
+        // MONTH, DAY, YM, MD, YMD, YYXX, YYYX, XXXX (= YEAR), plus 0.
+        // Any other value is an L2 partial mask.
+        if (!isL1UnspecifiedMask(unspecified.value())) return EdtfLevel.L2;
 
-        // L1 qualifiers are whole-date only: uncertain / approximate
-        // either 0 or YMD.
+        // L1 UA qualifiers cover everything up to the date's precision:
+        // 0 (no qualifier), YEAR, YM, or YMD.
+        if (!isL1UaMask(uncertain.value())) return EdtfLevel.L2;
+        if (!isL1UaMask(approximate.value())) return EdtfLevel.L2;
+
+        // If BOTH uncertain and approximate are set, they must match
+        // to be expressible as a single % marker at a whole-date L1
+        // level. Mismatched masks (e.g., year uncertain + month
+        // approximate) are L2.
         int u = uncertain.value();
         int a = approximate.value();
-        if (u != 0 && u != Bitmask.YMD) return EdtfLevel.L2;
-        if (a != 0 && a != Bitmask.YMD) return EdtfLevel.L2;
+        if (u != 0 && a != 0 && u != a) return EdtfLevel.L2;
 
         return EdtfLevel.L1;
     }
 
-    private static boolean isL1Mask(int mask) {
+    private static boolean isL1UnspecifiedMask(int mask) {
         return mask == 0
             || mask == Bitmask.YEAR
             || mask == Bitmask.MONTH
@@ -158,6 +164,13 @@ public final class EdtfDate implements EdtfTemporal {
             || mask == Bitmask.YMD
             || mask == Bitmask.YYXX
             || mask == Bitmask.YYYX;
+    }
+
+    private static boolean isL1UaMask(int mask) {
+        return mask == 0
+            || mask == Bitmask.YEAR
+            || mask == Bitmask.YM
+            || mask == Bitmask.YMD;
     }
 
     @Override public long min() {
@@ -294,10 +307,37 @@ public final class EdtfDate implements EdtfTemporal {
         if (unspecified.value() != 0) {
             return renderMasked();
         }
-        // Qualified dates (L1 whole-date UA): emit with trailing marker.
-        String body = renderPlainDate();
-        String marker = resolveUaMarker();
-        return body + marker;
+        // Date-only value with UA markers: use positional rendering.
+        if (!precision.isAtomic()
+            && (uncertain.value() != 0 || approximate.value() != 0)) {
+            return renderPositionalUa();
+        }
+        // No UA or datetime: fall through.
+        return renderPlainDate();
+    }
+
+    /**
+     * Render the date with UA markers placed per
+     * {@link Bitmask#qualified(int)}. Uses the {@code %} combined
+     * form where a position carries both {@code ?} and {@code ~}.
+     */
+    private String renderPositionalUa() {
+        String[] values = switch (precision) {
+            case YEAR -> new String[]{padYear(year)};
+            case MONTH -> new String[]{padYear(year), pad2(month)};
+            case DAY -> new String[]{padYear(year), pad2(month), pad2(day)};
+            default -> throw new IllegalStateException("UA not supported for " + precision);
+        };
+        if (uncertain.value() != 0) {
+            values = uncertain.marks(values, '?');
+        }
+        if (approximate.value() != 0) {
+            values = approximate.marks(values, '~');
+            for (int i = 0; i < values.length; i++) {
+                values[i] = values[i].replace("?~", "%").replace("~?", "%");
+            }
+        }
+        return String.join("-", values);
     }
 
     private String renderMasked() {
@@ -308,15 +348,6 @@ public final class EdtfDate implements EdtfTemporal {
             sb.append('-').append(pattern[i]);
         }
         return sb.toString();
-    }
-
-    private String resolveUaMarker() {
-        int u = uncertain.value();
-        int a = approximate.value();
-        if (u != 0 && a != 0) return "%";
-        if (u != 0) return "?";
-        if (a != 0) return "~";
-        return "";
     }
 
     private String renderPlainDate() {

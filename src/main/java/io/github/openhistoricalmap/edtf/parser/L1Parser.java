@@ -120,9 +120,17 @@ public final class L1Parser {
         }
         c.accept(ch);
 
-        Bitmask ymdMask = new Bitmask(Bitmask.YMD);
-        Bitmask u = (ch == '?' || ch == '%') ? ymdMask : Bitmask.EMPTY;
-        Bitmask a = (ch == '~' || ch == '%') ? ymdMask : Bitmask.EMPTY;
+        // L1 trailing UA covers all components up to the date's
+        // precision. Per edtf.js Date.bits(): year-precision -> YEAR,
+        // month-precision -> YM, day-precision or beyond -> YMD.
+        int maskValue = switch (date.precision()) {
+            case YEAR -> Bitmask.YEAR;
+            case MONTH -> Bitmask.YM;
+            case DAY, MINUTE, SECOND, MILLISECOND -> Bitmask.YMD;
+        };
+        Bitmask mask = new Bitmask(maskValue);
+        Bitmask u = (ch == '?' || ch == '%') ? mask : Bitmask.EMPTY;
+        Bitmask a = (ch == '~' || ch == '%') ? mask : Bitmask.EMPTY;
         return date.withQualifiers(u, a, Bitmask.EMPTY);
     }
 
@@ -251,13 +259,13 @@ public final class L1Parser {
         if (s.isEmpty()) return Endpoint.Unknown.INSTANCE;
         if (s.equals("..")) return Endpoint.Open.INSTANCE;
         try {
-            return new Endpoint.Bounded(L0Parser.parse(s));
-        } catch (EdtfParseException ignored) {}
-        try {
-            Cursor c = new Cursor(s);
-            EdtfTemporal t = parseNonInterval(c);
-            if (c.atEnd()) return new Endpoint.Bounded(t);
-        } catch (EdtfParseException ignored) {}
-        throw new EdtfParseException("invalid interval endpoint: " + s, s);
+            // Delegate to the top-level facade so L2 endpoints
+            // (extended seasons, decades, masked / positional-UA
+            // dates, etc.) are accepted alongside L0 and L1.
+            return new Endpoint.Bounded(
+                io.github.openhistoricalmap.edtf.Edtf.parse(s));
+        } catch (EdtfParseException e) {
+            throw new EdtfParseException("invalid interval endpoint: " + s, s);
+        }
     }
 }
