@@ -39,6 +39,17 @@ const LEVEL0 = [
   '20', '00', '19', '-01', '-05', '-99',
 ];
 
+const LEVEL2 = [
+  // Non-progressive partial masks
+  '2X1X', '20X0',
+  // Partial month / day
+  '2020-0X', '2020-05-X5', '2020-05-1X',
+  // Sets (square brackets) with edtf.js-compatible .. placement
+  '[2020, 2021]', '[2020, 2021, 2023]', '[..2020]', '[2020..]',
+  // Lists (curly braces)
+  '{2020, 2021}', '{2020}',
+];
+
 const LEVEL1 = [
   // Qualified dates (trailing UA)
   '2020?', '2020~', '2020%',
@@ -86,4 +97,7 @@ if (which === 'all' || which === 'level0') {
 }
 if (which === 'all' || which === 'level1') {
   for (const input of LEVEL1) emit(input, 1);
+}
+if (which === 'all' || which === 'level2') {
+  for (const input of LEVEL2) emit(input, 2);
 }

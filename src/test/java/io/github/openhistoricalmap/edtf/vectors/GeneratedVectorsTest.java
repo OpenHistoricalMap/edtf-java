@@ -40,6 +40,11 @@ class GeneratedVectorsTest {
         return runVectorFile("/vectors/level1.tsv");
     }
 
+    @TestFactory
+    List<DynamicTest> level2() throws IOException {
+        return runVectorFile("/vectors/level2.tsv");
+    }
+
     private List<DynamicTest> runVectorFile(String resourcePath) throws IOException {
         List<Vector> vectors = loadVectors(resourcePath);
         List<DynamicTest> tests = new ArrayList<>(vectors.size());
