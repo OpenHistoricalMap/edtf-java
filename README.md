@@ -55,15 +55,26 @@ implementation 'io.github.openhistoricalmap:edtf:0.1.0'
 | 0     | ISO 8601-1 dates, datetimes, centuries             | v0.1 &mdash; done      |
 | 1     | Uncertain / approximate / unspecified, Y-notation, | v0.1 &mdash; done      |
 |       | seasons, open / unknown intervals                  |                        |
-| 2     | Sets, lists, partial masking, decades, significant | Planned v0.2           |
-|       | digits, exponential years                          |                        |
-| 3     | Experimental L3 season qualifiers, season-on-both- | Planned v0.3           |
-|       | sides intervals                                    |                        |
+| 2     | Sets, lists, consecutive ranges, partial masking,  | v0.2 &mdash; done      |
+|       | extended seasons (25-41), decades, Y exponential,  |                        |
+|       | significant-digits, positional UA markers          |                        |
+| 3     | Season-to-season intervals (via L1/L2 endpoints);  | v0.2 &mdash; partial   |
+|       | further L3-specific forms                          | (planned v0.3)         |
+
+**Still deferred** for a future release:
+
+- **Formatting / localization** &mdash; locale-aware pretty-printing of
+  dates via `ResourceBundle` (English first, then Transifex-managed
+  translations). Current `toEdtfString()` produces only the
+  canonical EDTF form.
+- **Ant / Ivy consumption smoke test** against a real JOSM plugin
+  setup, to verify the Maven Central artefact works end-to-end from
+  an `ivy.xml` dependency declaration.
 
 Comparison (`compareTo`, `covers`) and epoch-millisecond bounds
 (`min` / `max`) are implemented for every supported type. Canonical
-string rendering matches {@code edtf.js} for parity; see
-`ATTRIBUTION.md` for documented deviations.
+string rendering matches edtf.js for parity; see `ATTRIBUTION.md` for
+documented deviations.
 
 Formatting and localization land in v0.3+ with English first; additional
 locales contributed via [Transifex](https://app.transifex.com/).
