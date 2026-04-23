@@ -66,15 +66,22 @@ implementation 'io.github.openhistoricalmap:edtf:0.2.0'
 | 3     | Season-to-season intervals (via L1/L2 endpoints);  | v0.2 &mdash; partial   |
 |       | further L3-specific forms                          | (planned v0.3)         |
 
-**Still deferred** for a future release:
+**Locale-aware formatting** ships in v0.3.0 via
+`io.github.openhistoricalmap.edtf.format.EdtfFormatter`:
 
-- **Formatting / localization** &mdash; locale-aware pretty-printing of
-  dates via `ResourceBundle` (English first, then Transifex-managed
-  translations). Current `toEdtfString()` produces only the
-  canonical EDTF form.
-- **Ant / Ivy consumption smoke test** against a real JOSM plugin
-  setup, to verify the Maven Central artefact works end-to-end from
-  an `ivy.xml` dependency declaration.
+```java
+import io.github.openhistoricalmap.edtf.format.EdtfFormatter;
+import java.util.Locale;
+
+EdtfFormatter f = EdtfFormatter.forLocale(Locale.US);
+f.format(Edtf.parse("2020-05"));     // "May 2020"
+f.format(Edtf.parse("199"));         // "the 1990s"
+f.format(Edtf.parse("2020/2021"));   // "2020 to 2021"
+f.format(Edtf.parse("2020-21"));     // "Q1 2020"
+```
+
+Translations are managed via [Transifex](https://app.transifex.com/);
+contributors don't hand-edit `messages_<locale>.properties` files.
 
 Comparison (`compareTo`, `covers`) and epoch-millisecond bounds
 (`min` / `max`) are implemented for every supported type. Canonical

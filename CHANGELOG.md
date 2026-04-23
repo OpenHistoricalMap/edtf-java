@@ -4,6 +4,51 @@ All notable changes to this project are documented here. The format is
 loosely based on [Keep a Changelog](https://keepachangelog.com/) and
 this project follows [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] &mdash; unreleased
+
+Closes the three v0.2.0 follow-up issues. Adds locale-aware
+formatting, a real Ant/Ivy consumption smoke test, and three
+hand-curated test-vector TSVs.
+
+### Added
+
+- **`EdtfFormatter`** in the new
+  `io.github.openhistoricalmap.edtf.format` package &mdash; a
+  locale-aware human-readable formatter for every supported
+  `EdtfTemporal` subtype. Default English bundle ships at
+  `messages.properties`; translations are managed via Transifex.
+  Examples:
+  - `EdtfFormatter.forLocale(Locale.US).format(Edtf.parse("2020-05"))`
+    &rarr; `"May 2020"`
+  - `format(Edtf.parse("199"))` &rarr; `"the 1990s"`
+  - `format(Edtf.parse("2020/2021"))` &rarr; `"2020 to 2021"`
+  - `format(Edtf.parse("2020-21"))` &rarr; `"Q1 2020"`
+- **Three new test-vector TSVs** under `src/test/resources/vectors/`:
+  - `loc-spec.tsv` &mdash; curated from the Library of Congress
+    EDTF specification page (Levels 0-2).
+  - `iso8601-2.tsv` &mdash; curated from the ISO 8601-2:2019
+    standard's example callouts, restricted to the EDTF/LoC
+    implicit-form profile.
+  - `edge-cases.tsv` &mdash; hand-curated worst-case inputs with
+    a 7th `valid` column, including INVALID rows that assert
+    `EdtfParseException`.
+- **Ant/Ivy consumption smoke test** at `smoke/` &mdash; a
+  self-contained Ant + Ivy project that resolves the published
+  artefact from Maven Central, compiles a small program that
+  calls `Edtf.parse` and `EdtfFormatter`, and asserts on its
+  output. Daily `smoke.yml` GitHub Actions workflow runs it
+  against the latest release.
+- **Module export**: `io.github.openhistoricalmap.edtf.format` is
+  now exported from the JPMS module descriptor.
+- 358 unit tests (up from 247 in 0.2.0).
+
+### Documented divergences
+
+No new divergences from edtf.js. The four documented in 0.2.0 still
+apply.
+
+[0.3.0]: https://github.com/OpenHistoricalMap/edtf-java/releases/tag/v0.3.0
+
 ## [0.2.0] &mdash; 2026-04-23
 
 First public release on Maven Central. Covers EDTF Levels 0, 1, and most
