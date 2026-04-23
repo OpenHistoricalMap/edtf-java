@@ -1,14 +1,15 @@
 package io.github.openhistoricalmap.edtf;
 
+import io.github.openhistoricalmap.edtf.parser.L0Parser;
+import java.util.Objects;
+
 /**
- * Static façade for parsing and rendering EDTF (Extended Date/Time Format)
- * strings. This is the primary entry point for consumers of the library.
+ * Static façade for parsing and rendering EDTF (Extended Date/Time
+ * Format) strings. This is the primary entry point for consumers of
+ * the library.
  *
- * <p><strong>Scaffolding placeholder.</strong> The parse and format methods
- * are intentionally unimplemented at 0.1.0-SNAPSHOT; they will land in
- * Phase 3 (L0 parser) and subsequent phases. See
- * {@code REFERENCES.md} and the project plan for the phased implementation
- * schedule.
+ * <p>At Phase 3 only Level 0 ({@link EdtfLevel#L0}) is supported.
+ * Levels 1 through 3 land in subsequent phases.
  *
  * @see <a href="https://www.loc.gov/standards/datetime/">LoC EDTF specification</a>
  * @see <a href="https://www.iso.org/standard/70908.html">ISO 8601-2:2019</a>
@@ -17,5 +18,49 @@ public final class Edtf {
 
     private Edtf() {
         // static façade — no instances
+    }
+
+    /**
+     * Parse {@code input} as an EDTF value.
+     *
+     * @throws EdtfParseException if the input is not a valid EDTF string
+     *                            at any supported level
+     * @throws NullPointerException if {@code input} is {@code null}
+     */
+    public static EdtfTemporal parse(String input) {
+        return parse(input, ParseOptions.DEFAULT);
+    }
+
+    /**
+     * Parse {@code input} as an EDTF value, constrained by
+     * {@code options}.
+     *
+     * @throws EdtfParseException if the input does not parse, or parses
+     *                            only at a level / type the options forbid
+     */
+    public static EdtfTemporal parse(String input, ParseOptions options) {
+        Objects.requireNonNull(input, "input");
+        Objects.requireNonNull(options, "options");
+
+        // Phase 3: only L0 is implemented. L1..L3 will be tried in
+        // order in later phases, with the lowest-level legal result
+        // winning per edtf.js's behaviour.
+        EdtfTemporal result = L0Parser.parse(input);
+
+        if (!options.permits(result.level())) {
+            throw new EdtfParseException(
+                "value parses at level " + result.level()
+                    + " but options cap at " + options.maxLevel(),
+                input
+            );
+        }
+        if (!options.permits(result.type())) {
+            throw new EdtfParseException(
+                "value is of type " + result.type()
+                    + " which is not permitted by options",
+                input
+            );
+        }
+        return result;
     }
 }
