@@ -9,8 +9,10 @@
 <project name="edtf-java-smoke" basedir="." default="test"
          xmlns:ivy="antlib:org.apache.ivy.ant">
 
-    <!-- Library version under test. Override with -Dedtf.version=X.Y.Z. -->
-    <property name="edtf.version" value="0.2.0"/>
+    <!-- Library version under test. Override with -Dedtf.version=X.Y.Z.
+         Bump this in the same commit that tags a new release so the
+         daily smoke run always exercises the latest published artefact. -->
+    <property name="edtf.version" value="0.3.1"/>
 
     <property name="lib.dir"     value="lib"/>
     <property name="build.dir"   value="build"/>
