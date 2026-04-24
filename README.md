@@ -134,6 +134,13 @@ rationale. Commits with AI involvement carry a `Co-Authored-By: Claude`
 trailer; contributors are asked to disclose AI involvement in their own
 contributions ([`CONTRIBUTING.md`](CONTRIBUTING.md)).
 
+## Roadmap
+
+See [`ROADMAP.md`](ROADMAP.md) for forward-looking plans
+(near-term issues, the path to 1.0, and maintenance reminders
+like token / key rotations). [`CHANGELOG.md`](CHANGELOG.md)
+covers backward-looking version history.
+
 ## References
 
 - [ISO 8601-2:2019][iso] — the authoritative standard
