@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format is
 loosely based on [Keep a Changelog](https://keepachangelog.com/) and
 this project follows [Semantic Versioning](https://semver.org/).
 
-## [0.3.1] &mdash; unreleased
+## [0.3.1] &mdash; 2026-04-24
 
 Dependency-and-tooling release. The five seeded locale bundles
 (German, French, Spanish, Italian, Japanese) are the only
